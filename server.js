@@ -351,16 +351,19 @@ async function buscarHibrid(pregunta) {
 }
 
 // ─── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Eres CELI, el asistente inteligente oficial del PLE-RD (Programa de Liderazgo Estudiantil de la República Dominicana), una iniciativa de CELIDER Grandeza que forma a jóvenes líderes dominicanos en habilidades esenciales, valores y pensamiento crítico.
+// ─── Detectar si es un saludo simple ─────────────────────────────────────────
+const SALUDOS = /^(hola|hello|hi|buenas|buenos días|buenas tardes|buenas noches|hey|qué tal|que tal|ey)[\s!?.]*$/i;
 
-Tu misión es asistir a delegados, facilitadores y participantes del PLE-RD respondiendo sus dudas de forma clara, directa y útil.
+// ─── System prompt ────────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `Eres CELI, el asistente oficial del PLE-RD (Programa de Liderazgo Estudiantil de la República Dominicana) de CELIDER Grandeza.
 
-REGLAS:
-- Responde directo, sin frases como "basado en el contexto" o "según el documento"
-- Si no tienes información suficiente, di: "Esa información no está en mi base de datos del PLE-RD. Consulta a tu facilitador."
-- Sé amigable, profesional y conciso
-- Máximo 3 párrafos por respuesta
-- Habla en español dominicano natural`;
+REGLAS ESTRICTAS:
+- Responde ÚNICAMENTE sobre el PLE-RD, CELIDER y temas directamente relacionados
+- Si la pregunta no tiene relación con el PLE-RD, responde: "Solo puedo ayudarte con temas del PLE-RD y CELIDER. ¿Tienes alguna duda sobre el programa?"
+- Responde directo, SIN frases como "basado en el contexto" o "según el documento"
+- Si no encuentras la información en el contexto, di: "Esa información no está en mi base de datos. Consulta a tu facilitador."
+- Máximo 2 párrafos. Sin despedidas ni firmas.
+- Español dominicano natural y amigable`;
 
 // ─── Endpoints ────────────────────────────────────────────────────────────────
 app.get('/api/sugerencias', (req, res) => {
@@ -374,14 +377,26 @@ app.get('/api/sugerencias', (req, res) => {
     });
 });
 
+// ─── Endpoint chat ────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
     try {
         const { pregunta } = req.body;
         if (!pregunta) return res.status(400).json({ respuesta: 'Por favor, envía una pregunta.' });
         if (pregunta.length > 500) return res.status(400).json({ respuesta: 'Pregunta demasiado larga.' });
 
+        // Saludo simple — responder sin RAG ni LLM
+        if (SALUDOS.test(pregunta.trim())) {
+            return res.json({
+                respuesta: '¡Hola! Soy CELI, tu asistente del PLE-RD. ¿En qué puedo ayudarte hoy?'
+            });
+        }
+
         const contexto = await buscarHibrid(pregunta);
-        const systemConContexto = `${SYSTEM_PROMPT}\n\nCONTEXTO DEL MANUAL:\n${contexto}`;
+
+        // Si el contexto es irrelevante, no lo mandes
+        const systemConContexto = contexto.includes('No se encontró')
+            ? SYSTEM_PROMPT
+            : `${SYSTEM_PROMPT}\n\nINFORMACIÓN DEL PLE-RD (usa solo esto para responder):\n${contexto}`;
 
         const { respuesta, provider } = await llamarLLM(systemConContexto, pregunta);
         console.log(`✅ Respuesta generada por ${provider}`);
@@ -390,7 +405,7 @@ app.post('/api/chat', async (req, res) => {
     } catch (error) {
         console.error('ERROR:', error.message);
         res.status(503).json({
-            respuesta: 'Todos los servicios de IA están temporalmente no disponibles. Intenta en unos minutos.',
+            respuesta: 'Servicio temporalmente no disponible. Intenta en unos minutos.',
         });
     }
 });

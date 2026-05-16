@@ -52,9 +52,30 @@ const PROVIDERS = [
             apiKey: process.env.OPENROUTER_API_KEY,
             baseURL: 'https://openrouter.ai/api/v1',
         }) : null,
-        model: 'google/gemma-3-27b-it:free',
+        model: 'google/gemma-2-9b-it:free',
         max_tokens: 500,
     },
+
+    {
+    name: 'OpenRouter-DeepSeek',
+    enabled: !!process.env.OPENROUTER_API_KEY,
+    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+    }) : null,
+    model: 'deepseek/deepseek-r1:free',
+    max_tokens: 500,
+},
+{
+    name: 'OpenRouter-Mistral',
+    enabled: !!process.env.OPENROUTER_API_KEY,
+    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+    }) : null,
+    model: 'mistralai/mistral-7b-instruct:free',
+    max_tokens: 500,
+},
 ];
 
 // Estado de cada proveedor: si da 429, lo enfriamos por un tiempo

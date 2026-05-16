@@ -46,34 +46,34 @@ const PROVIDERS = [
         max_tokens: 500,
     },
     {
-        name: 'OpenRouter-Gemma',
-        enabled: !!process.env.OPENROUTER_API_KEY,
-        client: process.env.OPENROUTER_API_KEY ? new OpenAI({
-            apiKey: process.env.OPENROUTER_API_KEY,
-            baseURL: 'https://openrouter.ai/api/v1',
-        }) : null,
-        model: 'google/gemma-2-9b-it:free',
-        max_tokens: 500,
-    },
-
-    {
-    name: 'OpenRouter-DeepSeek',
+{
+    name: 'OpenRouter-1',
     enabled: !!process.env.OPENROUTER_API_KEY,
     client: process.env.OPENROUTER_API_KEY ? new OpenAI({
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: 'https://openrouter.ai/api/v1',
     }) : null,
-    model: 'deepseek/deepseek-r1:free',
+    model: 'openrouter/free',
     max_tokens: 500,
 },
 {
-    name: 'OpenRouter-Mistral',
+    name: 'OpenRouter-2',
     enabled: !!process.env.OPENROUTER_API_KEY,
     client: process.env.OPENROUTER_API_KEY ? new OpenAI({
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: 'https://openrouter.ai/api/v1',
     }) : null,
-    model: 'mistralai/mistral-7b-instruct:free',
+    model: 'openrouter/free',
+    max_tokens: 500,
+},
+{
+    name: 'OpenRouter-3',
+    enabled: !!process.env.OPENROUTER_API_KEY,
+    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+    }) : null,
+    model: 'openrouter/free',
     max_tokens: 500,
 },
 ];

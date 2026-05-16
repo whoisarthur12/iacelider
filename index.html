@@ -42,7 +42,7 @@
     // 1. Cargar sugerencias automáticas al iniciar la página
     async function cargarSugerencias() {
         try {
-            const res = await fetch('http://localhost:3000/api/sugerencias');
+            const res = await fetch('https://iacelider-production.up.railway.app/api/sugerencias');
             const data = await res.json();
             const contenedor = document.getElementById('sugerencias');
             
@@ -75,7 +75,7 @@
 
         try {
             // Petición ajustada exactamente a lo que pide tu server.js
-            const respuesta = await fetch('http://localhost:3000/api/chat', {
+            const respuesta = await fetch('https://iacelider-production.up.railway.app/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

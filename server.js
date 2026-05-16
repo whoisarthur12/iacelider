@@ -26,6 +26,36 @@ const PROVIDERS = [
         max_tokens: 500,
     },
     {
+    name: 'Groq-Gemma',
+    enabled: !!process.env.GROQ_API_KEY,
+    client: process.env.GROQ_API_KEY ? new OpenAI({
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: 'https://api.groq.com/openai/v1',
+    }) : null,
+    model: 'gemma2-9b-it',
+    max_tokens: 500,
+},
+{
+    name: 'Groq-Mixtral',
+    enabled: !!process.env.GROQ_API_KEY,
+    client: process.env.GROQ_API_KEY ? new OpenAI({
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: 'https://api.groq.com/openai/v1',
+    }) : null,
+    model: 'mixtral-8x7b-32768',
+    max_tokens: 500,
+},
+{
+    name: 'Cerebras',
+    enabled: !!process.env.CEREBRAS_API_KEY,
+    client: process.env.CEREBRAS_API_KEY ? new OpenAI({
+        apiKey: process.env.CEREBRAS_API_KEY,
+        baseURL: 'https://api.cerebras.ai/v1',
+    }) : null,
+    model: 'llama3.1-8b',
+    max_tokens: 500,
+},
+    {
         name: 'Gemini',
         enabled: !!process.env.GEMINI_API_KEY,
         client: process.env.GEMINI_API_KEY ? new OpenAI({
@@ -103,57 +133,60 @@ async function llamarLLM(systemPrompt, userMessage) {
         throw new Error('Todos los proveedores están en cooldown o sin configurar.');
     }
 
-    for (const provider of disponibles) {
-        try {
-            console.log(`🤖 Usando: ${provider.name} (${provider.model})`);
+    // Lanza todos en paralelo — gana el primero que responda
+    const carreras = disponibles.map(provider =>
+        new Promise(async (resolve, reject) => {
+            try {
+                console.log(`🏁 Intentando: ${provider.name}`);
+                const completion = await provider.client.chat.completions.create({
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userMessage },
+                    ],
+                    model: provider.model,
+                    temperature: 0.3,
+                    max_tokens: provider.max_tokens,
+                });
 
-            const completion = await provider.client.chat.completions.create({
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userMessage },
-                ],
-                model: provider.model,
-                temperature: 0.3,
-                max_tokens: provider.max_tokens,
-            });
+                const respuesta = completion.choices[0]?.message?.content;
+                if (!respuesta) throw new Error('Respuesta vacía');
 
-            const respuesta = completion.choices[0]?.message?.content;
-            if (!respuesta) throw new Error('Respuesta vacía');
+                // Reset si funcionó
+                providerState[provider.name].errors = 0;
+                providerState[provider.name].cooldownUntil = 0;
 
-            // Reset errores si funcionó
-            providerState[provider.name].errors = 0;
-            providerState[provider.name].cooldownUntil = 0;
+                resolve({ respuesta, provider: provider.name });
 
-            return { respuesta, provider: provider.name };
+            } catch (err) {
+                const msg = err.message || '';
+                const status = err.status || err.response?.status;
 
-        } catch (err) {
-            const msg = err.message || '';
-            const status = err.status || err.response?.status;
+                if (status === 429 || msg.includes('rate limit') || msg.includes('Rate limit')) {
+                    const waitMatch = msg.match(/(\d+)m(\d+(\.\d+)?)s/);
+                    const waitSeconds = waitMatch
+                        ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2])
+                        : 600;
+                    marcarCooldown(provider.name, Math.ceil(waitSeconds) + 30);
+                }
 
-            if (status === 429 || msg.includes('429') || msg.includes('rate limit') || msg.includes('Rate limit')) {
-                // Extraer tiempo de espera del mensaje si viene
-                const waitMatch = msg.match(/(\d+)m(\d+(\.\d+)?)s/);
-                const waitSeconds = waitMatch
-                    ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2])
-                    : 600;
-                marcarCooldown(provider.name, Math.ceil(waitSeconds) + 30);
-                console.log(`   ↩️  Intentando siguiente proveedor...`);
-                continue;
+                if (status === 401 || msg.includes('API key')) {
+                    marcarCooldown(provider.name, 3600);
+                }
+
+                console.error(`❌ ${provider.name}: ${msg.slice(0, 60)}`);
+                reject(new Error(`${provider.name} falló`));
             }
+        })
+    );
 
-            if (status === 401 || msg.includes('401') || msg.includes('API key')) {
-                marcarCooldown(provider.name, 3600); // 1 hora si key inválida
-                console.error(`🔑 ${provider.name}: API key inválida`);
-                continue;
-            }
-
-            // Error desconocido — skip y sigue
-            console.error(`❌ ${provider.name}: ${msg}`);
-            continue;
-        }
+    // Promise.any = gana el primero en resolver, ignora los que fallen
+    try {
+        const resultado = await Promise.any(carreras);
+        console.log(`✅ Ganó la carrera: ${resultado.provider}`);
+        return resultado;
+    } catch {
+        throw new Error('Ningún proveedor pudo responder.');
     }
-
-    throw new Error('Ningún proveedor pudo responder.');
 }
 
 // ─── Carga de documentos ──────────────────────────────────────────────────────
@@ -355,15 +388,25 @@ async function buscarHibrid(pregunta) {
 const SALUDOS = /^(hola|hello|hi|buenas|buenos días|buenas tardes|buenas noches|hey|qué tal|que tal|ey)[\s!?.]*$/i;
 
 // ─── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Eres CELI, el asistente oficial del PLE-RD (Programa de Liderazgo Estudiantil de la República Dominicana) de CELIDER Grandeza.
+const SYSTEM_PROMPT = `Eres CELI, asistente del PLE-RD de CELIDER Grandeza. Ayudas a delegados y participantes del programa.
 
-REGLAS ESTRICTAS:
-- Responde ÚNICAMENTE sobre el PLE-RD, CELIDER y temas directamente relacionados
-- Si la pregunta no tiene relación con el PLE-RD, responde: "Solo puedo ayudarte con temas del PLE-RD y CELIDER. ¿Tienes alguna duda sobre el programa?"
-- Responde directo, SIN frases como "basado en el contexto" o "según el documento"
-- Si no encuentras la información en el contexto, di: "Esa información no está en mi base de datos. Consulta a tu facilitador."
-- Máximo 2 párrafos. Sin despedidas ni firmas.
-- Español dominicano natural y amigable`;
+PERSONALIDAD:
+- Amigable, cercano, como un compañero que sabe mucho del programa
+- Habla natural, como dominicano, sin sonar a robot ni a manual
+- Nunca copies frases del manual textualmente — explica con tus propias palabras
+- Respuestas cortas: máximo 3 oraciones a menos que la pregunta requiera más detalle
+
+CÓMO RESPONDER:
+- Si te saludan o dicen algo casual ("saludos", "pero", "ok", "gracias"): responde natural y pregunta en qué puedes ayudar
+- Si preguntan sobre el PLE-RD: explica de forma simple y humana usando el contexto como referencia, NO como copia
+- Si no tienes la info: di "No tengo eso en mi base de datos, pregúntale a tu facilitador 😊"
+- Si la pregunta no es del PLE-RD: di "Solo manejo temas del PLE-RD, ¿en qué te puedo ayudar con el programa?"
+
+PROHIBIDO:
+- Copiar párrafos o frases exactas del manual
+- Respuestas largas con listas de reglas
+- Sonar formal o robótico
+- Inventar información que no esté en el contexto`;
 
 // ─── Endpoints ────────────────────────────────────────────────────────────────
 app.get('/api/sugerencias', (req, res) => {

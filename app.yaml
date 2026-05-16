@@ -1,0 +1,5 @@
+kind: wasmer.io/App.v0
+name: IACELIDER
+package: .
+env:
+  GROQ_API_KEY: "REEMPLAZAR_EN_RAILWAY"

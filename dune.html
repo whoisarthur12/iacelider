@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUN DUNE — Guía Completa</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sand: #C8A96E;
+    --sand-light: #F5E8C8;
+    --sand-dark: #8B6F3A;
+    --spice: #D4622A;
+    --spice-glow: #FF8C42;
+    --deep: #1A1208;
+    --parchment: #F9F2E3;
+    --ink: #2C1A06;
+    --blue-fremen: #4A90D9;
+    --bg: #F9F2E3;
+    --text: #2C1A06;
+    --muted: #7A6040;
+    --card-bg: #FFFDF6;
+    --border: rgba(139,111,58,0.2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #110D04;
+      --text: #F0E8D0;
+      --muted: #B09060;
+      --card-bg: #1C1508;
+      --border: rgba(200,169,110,0.15);
+      --parchment: #1C1508;
+      --sand-light: #2A1F0A;
+    }
+  }
+
+  body {
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* HEADER */
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-eye {
+    font-size: 2.5rem;
+    letter-spacing: 0.3em;
+    color: var(--sand);
+    margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--spice);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .hero-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero-quote {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* NAV */
+  .toc {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .toc-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--sand-dark);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
+  }
+  .toc-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: var(--spice);
+    text-decoration: none;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .toc-link:hover { background: var(--sand-light); }
+  .toc-num {
+    font-weight: 500;
+    opacity: 0.5;
+    min-width: 1.2rem;
+  }
+
+  /* SECTIONS */
+  section { margin-bottom: 4rem; }
+
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--spice);
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--sand);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  h2 .sec-num {
+    font-size: 0.75rem;
+    background: var(--spice);
+    color: #fff;
+    border-radius: 50%;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--sand-dark);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p { margin-bottom: 1rem; }
+
+  /* CALLOUT BOX */
+  .callout {
+    border-left: 3px solid var(--sand);
+    padding: 1rem 1.25rem;
+    background: var(--sand-light);
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+  .callout.spice { border-color: var(--spice); }
+  .callout-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sand-dark);
+    margin-bottom: 0.3rem;
+  }
+  .callout.spice .callout-label { color: var(--spice); }
+
+  /* ANALOGY CARD */
+  .analogy {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 1rem 0;
+  }
+  .analogy-side {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+  }
+  .analogy-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.2rem;
+  }
+  .analogy-name { font-weight: 500; color: var(--text); }
+  .analogy-desc { color: var(--muted); font-size: 0.8rem; line-height: 1.4; margin-top: 0.2rem; }
+  .analogy-arrow {
+    font-size: 1.2rem;
+    color: var(--sand);
+    flex-shrink: 0;
+  }
+
+  /* CASA CARDS */
+  .casa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .casa-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .casa-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(212,98,42,0.1); }
+
+  .casa-header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .casa-emblem {
+    font-size: 1.6rem;
+    margin-bottom: 0.4rem;
+  }
+  .casa-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+  }
+  .casa-planet {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .casa-lema {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--spice);
+    padding: 0.5rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--sand-light);
+  }
+  .casa-body {
+    padding: 0.75rem 1.25rem;
+  }
+  .casa-desc {
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+  .casa-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.6rem;
+  }
+  .tag {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tag-blue { background: #e0eef9; color: #1a5f99; }
+  .tag-red { background: #fce8e3; color: #a02c10; }
+  .tag-gold { background: #f5e8c8; color: #7a5020; }
+  .tag-green { background: #e4f0e0; color: #2d6a20; }
+  .tag-purple { background: #ede8f8; color: #5030a0; }
+  .tag-teal { background: #e0f4f0; color: #1a7060; }
+  .tag-gray { background: #eeece8; color: #504030; }
+
+  @media (prefers-color-scheme: dark) {
+    .tag-blue { background: #0d2e48; color: #7abde0; }
+    .tag-red { background: #3a1008; color: #f0906a; }
+    .tag-gold { background: #2a1a05; color: #d4a060; }
+    .tag-green { background: #0d2808; color: #70c850; }
+    .tag-purple { background: #180c38; color: #a080e0; }
+    .tag-teal { background: #042820; color: #40c0a0; }
+    .tag-gray { background: #181410; color: #b0a090; }
+    .casa-lema { background: rgba(200,169,110,0.1); }
+  }
+
+  .casa-commission {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .commission-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sand);
+    flex-shrink: 0;
+  }
+
+  /* PAISES LIST */
+  .paises-accordion {
+    margin-top: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .paises-toggle {
+    width: 100%;
+    background: var(--sand-light);
+    border: none;
+    padding: 0.6rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--sand-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+  .paises-toggle:hover { background: rgba(200,169,110,0.3); }
+  .paises-list {
+    display: none;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
+  }
+  .paises-list.open { display: block; }
+  .paises-list ul {
+    columns: 2;
+    column-gap: 1rem;
+    list-style: none;
+    padding: 0;
+  }
+  .paises-list li {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text);
+    padding: 0.2rem 0;
+    break-inside: avoid;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .paises-list li::before {
+    content: '·';
+    color: var(--sand);
+    font-weight: bold;
+  }
+
+  /* COMMISSION TABLE */
+  .commission-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+  }
+  .commission-table th {
+    background: var(--sand-light);
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sand-dark);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .commission-table td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  .commission-table tr:last-child td { border-bottom: none; }
+  .commission-table tr:hover td { background: var(--sand-light); }
+
+  /* GLOSSARY */
+  .glossary-item {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .glossary-item:last-child { border-bottom: none; }
+  .glossary-term {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--sand-dark);
+    padding-top: 0.1rem;
+  }
+  .glossary-def { color: var(--text); line-height: 1.5; }
+
+  /* TIPS */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .tip-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .tip-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+  .tip-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+  .tip-text {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* SCROLL NAV */
+  .back-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--spice);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(212,98,42,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.2s;
+  }
+  .back-top:hover { transform: scale(1.08); }
+
+  @media (max-width: 600px) {
+    .analogy { grid-template-columns: 1fr; text-align: center; }
+    .analogy-arrow { display: none; }
+    .paises-list ul { columns: 1; }
+    .glossary-item { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eye">✦ ⚔ ✦</div>
+  <h1>MUN DUNE<br><span style="font-size:0.6em; color:var(--sand-dark);">IMPERIUM PADISHAH</span></h1>
+  <div class="hero-subtitle">MONUR 13 — Guía Completa para Principiantes</div>
+  <p class="hero-quote">"El que controla la Especia, controla el universo."<br><span style="font-size:0.85em; opacity:0.7;">— Frank Herbert</span></p>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Índice de Contenido</div>
+  <div class="toc-grid">
+    <a href="#sec1" class="toc-link"><span class="toc-num">01</span> ¿Qué es esto?</a>
+    <a href="#sec2" class="toc-link"><span class="toc-num">02</span> Dune en 5 minutos</a>
+    <a href="#sec3" class="toc-link"><span class="toc-num">03</span> Las 9 Casas </a>
+    <a href="#sec4" class="toc-link"><span class="toc-num">04</span> Las 5 Comisiones </a>
+    <a href="#sec5" class="toc-link"><span class="toc-num">05</span> El Secretariado </a>
+  </div>
+</nav>
+
+<!-- SECCIÓN 1 -->
+<section id="sec1">
+  <div class="analogy">
+    <div class="analogy-side">
+      <div class="analogy-label">El Mundo Real</div>
+      <div class="analogy-name">Naciones Unidas</div>
+      <div class="analogy-desc">Países del mundo debaten, negocian y votan resoluciones sobre temas globales reales.</div>
+    </div>
+    <div class="analogy-arrow">⟺</div>
+    <div class="analogy-side">
+      <div class="analogy-label">El Universo de Dune</div>
+      <div class="analogy-name">Imperium Padishah</div>
+      <div class="analogy-desc">Casas nobles del Imperio galáctico pelean por el control de la Especia y el poder.</div>
+    </div>
+  </div>
+
+  <div class="callout spice">
+    <div class="callout-label">⚡ La idea central</div>
+    Cada país del mundo real está asignado a una Casa de Dune según sus características reales: cómo ejerce el poder, qué recursos tiene, qué rol juega en la geopolítica mundial. Si tu país es democrático y honorable → Casa Atreides. Si es una potencia autoritaria → Casa Harkonnen. Si controla un canal marítimo → Cofradía Espacial.
+  </div>
+</section>
+
+<!-- SECCIÓN 2 -->
+<section id="sec2">
+  <h2><span class="sec-num">2</span>Dune en 5 minutos (lo que necesitás saber)</h2>
+
+  <p>Dune es una saga de ciencia ficción del escritor Frank Herbert (1965). Es básicamente política medieval en el espacio, con un recurso escasísimo que todos quieren controlar.</p>
+
+  <div class="callout">
+    <div class="callout-label">🌌 El universo en una oración</div>
+    En un futuro lejano, la humanidad se extendió por miles de planetas. No hay computadoras (están prohibidas). El recurso más valioso del universo es <strong>la Especia</strong>, una droga que sólo existe en el planeta desierto Arrakis y que permite el viaje interestelar y prolonga la vida.
+  </div>
+
+  <h3>Los elementos clave que necesitás entender:</h3>
+
+  <div class="glossary-item">
+    <div class="glossary-term">El Imperium</div>
+    <div class="glossary-def">El gobierno galáctico. No es democrático: es un sistema feudal donde el Padishah Emperador gobierna, pero las Grandes Casas nobles tienen poder real. Similar a cómo el Consejo de Seguridad de la ONU funciona: hay reglas, pero las potencias grandes hacen lo que quieren.</div>
+  </div>
+  <div class="glossary-item">
+    <div class="glossary-term">Las Grandes Casas</div>
+    <div class="glossary-def">Las familias nobles que gobiernan planetas. Cada una tiene un planeta, un ejército y un rol especializado. El conflicto entre ellas impulsa toda la política del Imperium. En el MUN = los bloques de países.</div>
+  </div>
+  <div class="glossary-item">
+    <div class="glossary-term">El Landsraad</div>
+    <div class="glossary-def">La asamblea de todas las Grandes Casas. Votan leyes, resuelven disputas, equilibran el poder del Emperador. En el mundo real = la Asamblea General de la ONU.</div>
+  </div>
+  <div class="glossary-item">
+    <div class="glossary-term">La Gran Convención</div>
+    <div class="glossary-def">El tratado fundacional del Imperium: las reglas del juego que todos prometieron respetar. Prohíbe armas atómicas contra humanos. Similar a la Carta de la ONU o el Congreso de Viena de 1815.</div>
+  </div>
+</section>
+
+
+<!-- SECCIÓN 3 -->
+<section id="sec3">
+  <h2><span class="sec-num">3</span>Las 9 Casas — ¿Cuál es la tuya?</h2>
+
+  <p>Todo país está asignado a una Casa según su perfil geopolítico real. Hacé clic en cada Casa para ver los países que la integran.</p>
+
+  <div class="casa-grid">
+
+    <!-- ATREIDES -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">🦅</div>
+        <div class="casa-name">Casa Atreides</div>
+        <div class="casa-planet">Caladan → Arrakis</div>
+      </div>
+      <div class="casa-lema">"Por honor, no por miedo"</div>
+      <div class="casa-body">
+        <div class="casa-desc">La Casa del liderazgo honorable. Democracias consolidadas con fuerte tradición diplomática, respeto al derecho internacional y vocación multilateral. Buscan reformar el sistema desde adentro.</div>
+        <div class="casa-tags">
+          <span class="tag tag-blue">Democracias</span>
+          <span class="tag tag-teal">Multilateralismo</span>
+          <span class="tag tag-green">Derechos Humanos</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Gran Convención del Imperium (Congreso de Viena)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 15 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Francia</li><li>Canadá</li><li>Alemania</li><li>España</li>
+              <li>Italia</li><li>Portugal</li><li>Argentina</li><li>Chile</li>
+              <li>Costa Rica</li><li>Uruguay</li><li>Nueva Zelanda</li><li>Irlanda</li>
+              <li>Noruega</li><li>Suecia</li><li>Dinamarca</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HARKONNEN -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">☠</div>
+        <div class="casa-name">Casa Harkonnen</div>
+        <div class="casa-planet">Giedi Prime</div>
+      </div>
+      <div class="casa-lema">"El poder es su propio justificante"</div>
+      <div class="casa-body">
+        <div class="casa-desc">La Casa del poder sin reparos éticos. Regímenes autoritarios con historial de intervención militar unilateral, uso del veto para bloquear y hostilidad estructural al orden liberal internacional.</div>
+        <div class="casa-tags">
+          <span class="tag tag-red">Autoritarismo</span>
+          <span class="tag tag-red">Veto CS-ONU</span>
+          <span class="tag tag-gray">Aislamiento</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Alto Consejo del Imperium (Consejo de Seguridad)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 8 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Rusia</li><li>Bielorrusia</li><li>Corea del Norte</li><li>Nicaragua</li>
+              <li>Venezuela</li><li>Eritrea</li><li>Siria</li><li>Myanmar</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORRINO -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">👑</div>
+        <div class="casa-name">Casa Corrino</div>
+        <div class="casa-planet">Kaitain / Salusa Secundus</div>
+      </div>
+      <div class="casa-lema">"El Trono es eterno"</div>
+      <div class="casa-body">
+        <div class="casa-desc">La Casa Imperial. Las grandes potencias que diseñaron el orden internacional actual. Mantienen el sistema porque el sistema los mantiene a ellos. Conservadores del statu quo global.</div>
+        <div class="casa-tags">
+          <span class="tag tag-gold">Hegemonía</span>
+          <span class="tag tag-gold">Potencias G20</span>
+          <span class="tag tag-blue">Miembros P5</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Directorio CHOAM del Imperium (G20)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 10 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Estados Unidos</li><li>Reino Unido</li><li>China</li><li>Japón</li>
+              <li>Arabia Saudita</li><li>Australia</li><li>Corea del Sur</li><li>Brasil</li>
+              <li>México</li><li>Indonesia</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BENE GESSERIT -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">🌙</div>
+        <div class="casa-name">Bene Gesserit</div>
+        <div class="casa-planet">Sin planeta fijo — influencia en todos</div>
+      </div>
+      <div class="casa-lema">"El control es más refinado que la fuerza"</div>
+      <div class="casa-body">
+        <div class="casa-desc">Orden de mujeres con poderes suprahumanos de persuasión y manipulación. Sin ejército propio pero con influencia en todos los tronos. En la vida real: países pequeños con poder desproporcionado a su tamaño por mediación y diplomacia silenciosa.</div>
+        <div class="casa-tags">
+          <span class="tag tag-purple">Mediación Global</span>
+          <span class="tag tag-purple">Neutralidad</span>
+          <span class="tag tag-teal">Sedes ONU / CIJ</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Corte Imperial del Landsraad (CIJ)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 8 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Suiza</li><li>Vaticano</li><li>Singapur</li><li>Qatar</li>
+              <li>Finlandia</li><li>Austria</li><li>Países Bajos</li><li>Bélgica</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COFRADÍA -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">🚀</div>
+        <div class="casa-name">Cofradía Espacial</div>
+        <div class="casa-planet">Guild Heighliners — espacio interestelar</div>
+      </div>
+      <div class="casa-lema">"Sin nosotros, no hay Imperium"</div>
+      <div class="casa-body">
+        <div class="casa-desc">Monopolio del viaje interestelar. Sin su permiso, ningún ejército puede moverse, ningún comercio puede ocurrir. En el mundo real: países que controlan canales, estrechos y rutas marítimas críticas. No son potencias militares — son quienes deciden si las potencias pueden moverse.</div>
+        <div class="casa-tags">
+          <span class="tag tag-teal">Canales y Estrechos</span>
+          <span class="tag tag-teal">Rutas Marítimas</span>
+          <span class="tag tag-blue">Logística Global</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Alto Consejo del Imperium (Consejo de Seguridad)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 8 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Panamá (Canal)</li><li>Turquía (Bósforo)</li><li>Emiratos Árabes</li>
+              <li>Malasia (Malaca)</li><li>Egipto (Suez)</li><li>Grecia (flota mercante)</li>
+              <li>Georgia</li><li>Marruecos (Gibraltar)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IX -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">⚙</div>
+        <div class="casa-name">Casa Ix — Ixianos</div>
+        <div class="casa-planet">Ix (planeta subterráneo)</div>
+      </div>
+      <div class="casa-lema">"Lo que se puede construir, se puede vender"</div>
+      <div class="casa-body">
+        <div class="casa-desc">Ingenieros de élite. Producen las máquinas más avanzadas del Imperium al límite de lo prohibido. Monopolio tecnológico total. En el mundo real: países con tecnología tan avanzada que nadie más puede replicarla — Taiwán con chips, Países Bajos con máquinas EUV, Israel en ciberseguridad.</div>
+        <div class="casa-tags">
+          <span class="tag tag-blue">Monopolio Tech</span>
+          <span class="tag tag-blue">Semiconductores</span>
+          <span class="tag tag-green">Innovación de Élite</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Consejo de Tecnología Ix-Tleilax (OMPI)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 7 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Taiwán</li><li>Israel</li><li>Suecia</li><li>Países Bajos</li>
+              <li>Alemania</li><li>Finlandia</li><li>India</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TLEILAX -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">🧬</div>
+        <div class="casa-name">Orden Bene Tleilax</div>
+        <div class="casa-planet">Tleilax</div>
+      </div>
+      <div class="casa-lema">"La carne es nuestra ciencia"</div>
+      <div class="casa-body">
+        <div class="casa-desc">Maestros de la biotecnología. Clonan personas, fabrican vida. Hacen lo que el resto del Imperium considera abominable. En la vida real: países líderes en biotecnología, farmacéutica o con recursos biológicos únicos — y con regulación más laxa que los demás.</div>
+        <div class="casa-tags">
+          <span class="tag tag-green">Biotecnología</span>
+          <span class="tag tag-red">Ética cuestionada</span>
+          <span class="tag tag-green">Biodiversidad</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Consejo de Tecnología Ix-Tleilax (OMPI)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 6 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>China</li><li>India</li><li>Brasil</li>
+              <li>Cuba</li><li>Irán</li><li>Sudáfrica</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREMEN -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">🏜</div>
+        <div class="casa-name">Los Fremen de Arrakis</div>
+        <div class="casa-planet">Arrakis — el planeta desierto</div>
+      </div>
+      <div class="casa-lema">"El desierto es nuestra fortaleza"</div>
+      <div class="casa-body">
+        <div class="casa-desc">El pueblo nativo de Arrakis. Tienen el recurso más valioso del universo pero son ignorados por el Imperium durante milenios. En el mundo real: países con recursos estratégicos enormes (petróleo, litio, coltán) pero sin soberanía real sobre ellos, históricamente explotados.</div>
+        <div class="casa-tags">
+          <span class="tag tag-gold">Recursos Estratégicos</span>
+          <span class="tag tag-red">Dependencia externa</span>
+          <span class="tag tag-gold">Soberanía en lucha</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Gran Convención del Imperium (Congreso de Viena)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 12 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Bolivia (litio)</li><li>Venezuela (petróleo)</li><li>Irak (petróleo)</li>
+              <li>Nigeria (petróleo)</li><li>Congo RDC (coltán)</li><li>Angola (petróleo)</li>
+              <li>Kazajistán</li><li>Mongolia</li><li>Ghana</li>
+              <li>Mozambique (gas)</li><li>Ecuador</li><li>Timor Oriental</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASAS MENORES -->
+    <div class="casa-card">
+      <div class="casa-header">
+        <div class="casa-emblem">⚖</div>
+        <div class="casa-name">Casas Menores del Landsraad</div>
+        <div class="casa-planet">Planetas varios del Imperium</div>
+      </div>
+      <div class="casa-lema">"Sobrevivir es también una victoria"</div>
+      <div class="casa-body">
+        <div class="casa-desc">Las decenas de Casas que componen la mayoría del Landsraad. Sin poder individual decisivo, pero capaces de inclinar la balanza en bloque. Potencias medias, países emergentes, microestados — la mayoría silenciosa que puede unirse para desafiar a las Casas grandes.</div>
+        <div class="casa-tags">
+          <span class="tag tag-gray">Potencias medias</span>
+          <span class="tag tag-gray">Microestados</span>
+          <span class="tag tag-gray">Mayoría numérica</span>
+        </div>
+        <div class="casa-commission"><span class="commission-dot"></span> Gran Convención del Imperium (Congreso de Viena)</div>
+        <div class="paises-accordion">
+          <button class="paises-toggle" onclick="togglePaises(this)">
+            <span>Ver 53 países ▸</span>
+          </button>
+          <div class="paises-list">
+            <ul>
+              <li>Colombia</li><li>Perú</li><li>Polonia</li><li>Rumania</li>
+              <li>Hungría</li><li>República Checa</li><li>Serbia</li><li>Croacia</li>
+              <li>Albania</li><li>Argelia</li><li>Túnez</li><li>Senegal</li>
+              <li>Costa de Marfil</li><li>Etiopía</li><li>Tanzania</li><li>Kenia</li>
+              <li>Ruanda</li><li>Bangladesh</li><li>Pakistan</li><li>Vietnam</li>
+              <li>Tailandia</li><li>Filipinas</li><li>Jordania</li><li>Líbano</li>
+              <li>Yemen</li><li>Afganistán</li><li>Uzbekistán</li><li>Jamaica</li>
+              <li>Rep. Dominicana</li><li>Guatemala</li><li>Honduras</li><li>El Salvador</li>
+              <li>Paraguay</li><li>Guyana</li><li>San Marino</li><li>Mónaco</li>
+              <li>Liechtenstein</li><li>Andorra</li><li>Malta</li><li>Chipre</li>
+              <li>Luxemburgo</li><li>Islandia</li><li>Maldivas</li><li>Bhután</li>
+              <li>Nepal</li><li>Namibia</li><li>Botswana</li><li>Fiyi</li>
+              <li>Papua Nueva Guinea</li><li>Barbados</li><li>Trinidad y Tobago</li>
+              <li>Surinam</li><li>Haití</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECCIÓN 5 -->
+<section id="sec4">
+  <h2><span class="sec-num">4</span>Las 5 Comisiones — ¿Dónde debates?</h2>
+
+  <p>Hay 5 comisiones. Cada Casa tiene asignada una comisión principal donde debate, aunque algunos países pueden aparecer en más de una según el tema.</p>
+
+  <table class="commission-table">
+    <thead>
+      <tr>
+        <th>Nombre Real</th>
+        <th>Nombre en Dune</th>
+        <th>Temas que trata</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Congreso de Viena</strong> (1815)</td>
+        <td>Gran Convención del Imperium</td>
+        <td>Soberanía, fronteras, negociación del orden internacional, pueblos con recursos</td>
+      </tr>
+      <tr>
+        <td><strong>Consejo de Seguridad</strong> ONU</td>
+        <td>Alto Consejo del Imperium</td>
+        <td>Amenazas militares, conflictos, control de rutas, bloqueos</td>
+        
+      </tr>
+      <tr>
+        <td><strong>G20</strong> (economía global)</td>
+        <td>Directorio CHOAM del Imperium</td>
+        <td>Economía, distribución de recursos, sanciones, comercio interplanetario</td>
+      </tr>
+      <tr>
+        <td><strong>Corte Internacional</strong> de Justicia</td>
+        <td>Corte Imperial del Landsraad</td>
+        <td>Disputas de soberanía, violaciones a la Gran Convención, derechos</td>
+    
+      </tr>
+      <tr>
+        <td><strong>OMPI</strong> (Propiedad Intelectual)</td>
+        <td>Consejo de Tecnología Ix-Tleilax</td>
+        <td>Patentes tecnológicas, biotecnología, secretos industriales, regulación</td>
+
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SECCIÓN 6 -->
+<section id="sec5">
+  <h2><span class="sec-num">5</span>El Secretariado — ¿Quién organiza esto?</h2>
+
+  <p>El Secretariado es el equipo que organiza el MUN. En la temática de Dune, cada cargo tiene un título especial que refleja su función real.</p>
+
+  <table class="commission-table">
+    <thead>
+      <tr>
+        <th>Cargo Real en el MUN</th>
+        <th>Título en Dune</th>
+        <th>¿Por qué ese título?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Secretario/a General</td>
+        <td>Chamberlán Imperial</td>
+        <td>El Chamberlán administraba toda la corte del Padishah Emperador — el cargo máximo organizativo.</td>
+      </tr>
+      <tr>
+        <td>Subsecretaria Académica</td>
+        <td>Mentat Imperial</td>
+        <td>Los Mentats eran computadoras humanas de análisis puro. Representan la inteligencia analítica.</td>
+      </tr>
+      <tr>
+        <td>Multimedia y Contenido</td>
+        <td>Heraldo del Emperador</td>
+        <td>Los Heraldos anunciaban decretos y portaban la autoridad del trono. Voceros oficiales.</td>
+      </tr>
+      <tr>
+        <td>Secretaría Adjunta Logística</td>
+        <td>Navegante de la Cofradía</td>
+        <td>Los Navegantes garantizaban toda la logística interestelar. Sin ellos, nada se movía.</td>
+      </tr>
+      <tr>
+        <td>Capacitación y Formación</td>
+        <td>Maestro de Espadas Ginaz</td>
+        <td>Duncan Idaho era Maestro de Espadas — el entrenador de élite que elevaba el nivel de todos.</td>
+      </tr>
+      <tr>
+        <td>Directores de Comité</td>
+        <td>Nobles del Landsraad</td>
+        <td>Los Nobles presidían las sesiones legislativas con autoridad sobre debates y votaciones.</td>
+      </tr>
+      <tr>
+        <td>Subsecretaría de Crisis</td>
+        <td>Bashar Sardaukar</td>
+        <td>El Bashar era el general supremo de los Sardaukar — la élite de élite bajo presión extrema.</td>
+      </tr>
+      <tr>
+        <td>Bienestar de Delegados</td>
+        <td>Doctor Suk</td>
+        <td>Los Doctores Suk eran incapaces de causar daño — el bienestar era su prioridad absoluta.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<div style="text-align: center; padding: 3rem 0 1rem; border-top: 1px solid var(--border); margin-top: 2rem;">
+  <div style="font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--sand-dark); margin-bottom: 0.5rem;">✦ IMPERIUM PADISHAH ✦</div>
+  <div style="font-family: 'Inter', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;">MONUR 13</div>
+</div>
+
+<a href="#" class="back-top" title="Volver arriba">↑</a>
+
+<script>
+function togglePaises(btn) {
+  const list = btn.nextElementSibling;
+  const isOpen = list.classList.contains('open');
+  list.classList.toggle('open');
+  const count = btn.querySelector('span').textContent.match(/\d+/)[0];
+  btn.querySelector('span').textContent = isOpen
+    ? `Ver ${count} países ▸`
+    : `Ocultar países ▴`;
+}
+</script>
+
+</body>
+</html>

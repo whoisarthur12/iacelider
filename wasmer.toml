@@ -1,0 +1,4 @@
+[package]
+name = "miguelsuarez1609/proyecto-celider13"
+version = "0.1.9"
+description = "Servidor Node.js integrado con API de IA y Frontend"

@@ -12,6 +12,30 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
+
+let historial = [];  // ← agrega esto al inicio
+
+async function enviarMensaje(pregunta) {
+    // Agrega la pregunta al historial
+    historial.push({ role: 'user', content: pregunta });
+
+    const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pregunta, historial }),  // ← envía historial
+    });
+
+    const data = await res.json();
+
+    // Agrega la respuesta al historial
+    historial.push({ role: 'assistant', content: data.respuesta });
+
+    return data.respuesta;
+}
+
+// Limpiar historial si el usuario refresca o cierra
+// (opcional) window.addEventListener('beforeunload', () => historial = []);
+
 // ─── Proveedores de IA (rotación automática) ──────────────────────────────────
 // Agrega las keys en tu .env y Railway. Si una falla o se agota, pasa a la siguiente.
 const PROVIDERS = [
@@ -126,23 +150,28 @@ function marcarCooldown(providerName, seconds = 600) {
 }
 
 // Llama al LLM con rotación automática entre proveedores
-async function llamarLLM(systemPrompt, userMessage) {
+async function llamarLLM(systemPrompt, userMessage, historial = []) {
     const disponibles = PROVIDERS.filter(proveedorDisponible);
+    if (disponibles.length === 0) throw new Error('Todos los proveedores en cooldown.');
 
-    if (disponibles.length === 0) {
-        throw new Error('Todos los proveedores están en cooldown o sin configurar.');
-    }
+    // Construir mensajes con historial (máximo últimos 6 para no gastar tokens)
+    const historialReciente = historial.slice(-6).map(m => ({
+        role: m.role,       // 'user' o 'assistant'
+        content: m.content,
+    }));
 
-    // Lanza todos en paralelo — gana el primero que responda
+    const mensajes = [
+        { role: 'system', content: systemPrompt },
+        ...historialReciente,
+        { role: 'user', content: userMessage },
+    ];
+
     const carreras = disponibles.map(provider =>
         new Promise(async (resolve, reject) => {
             try {
                 console.log(`🏁 Intentando: ${provider.name}`);
                 const completion = await provider.client.chat.completions.create({
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userMessage },
-                    ],
+                    messages: mensajes,   // ← usa mensajes con historial
                     model: provider.model,
                     temperature: 0.3,
                     max_tokens: provider.max_tokens,
@@ -151,34 +180,34 @@ async function llamarLLM(systemPrompt, userMessage) {
                 const respuesta = completion.choices[0]?.message?.content;
                 if (!respuesta) throw new Error('Respuesta vacía');
 
-                // Reset si funcionó
                 providerState[provider.name].errors = 0;
                 providerState[provider.name].cooldownUntil = 0;
-
                 resolve({ respuesta, provider: provider.name });
 
             } catch (err) {
                 const msg = err.message || '';
                 const status = err.status || err.response?.status;
+                console.error(`❌ ${provider.name} | status: ${status} | ${msg.slice(0, 80)}`);
 
                 if (status === 429 || msg.includes('rate limit') || msg.includes('Rate limit')) {
                     const waitMatch = msg.match(/(\d+)m(\d+(\.\d+)?)s/);
-                    const waitSeconds = waitMatch
-                        ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2])
-                        : 600;
+                    const waitSeconds = waitMatch ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2]) : 600;
                     marcarCooldown(provider.name, Math.ceil(waitSeconds) + 30);
                 }
-
-                if (status === 401 || msg.includes('API key')) {
-                    marcarCooldown(provider.name, 3600);
-                }
-
-                console.error(`❌ ${provider.name}: ${msg.slice(0, 60)}`);
+                if (status === 401 || msg.includes('API key')) marcarCooldown(provider.name, 3600);
                 reject(new Error(`${provider.name} falló`));
             }
         })
     );
 
+    try {
+        const resultado = await Promise.any(carreras);
+        console.log(`✅ Ganó: ${resultado.provider}`);
+        return resultado;
+    } catch {
+        throw new Error('Ningún proveedor pudo responder.');
+    }
+}
     // Promise.any = gana el primero en resolver, ignora los que fallen
     try {
         const resultado = await Promise.any(carreras);
@@ -423,33 +452,26 @@ app.get('/api/sugerencias', (req, res) => {
 // ─── Endpoint chat ────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
     try {
-        const { pregunta } = req.body;
+        const { pregunta, historial = [] } = req.body;  // ← recibe historial
         if (!pregunta) return res.status(400).json({ respuesta: 'Por favor, envía una pregunta.' });
         if (pregunta.length > 500) return res.status(400).json({ respuesta: 'Pregunta demasiado larga.' });
 
-        // Saludo simple — responder sin RAG ni LLM
         if (SALUDOS.test(pregunta.trim())) {
-            return res.json({
-                respuesta: '¡Hola! Soy CELI, tu asistente del PLE-RD. ¿En qué puedo ayudarte hoy?'
-            });
+            return res.json({ respuesta: '¡Hola! Soy CELI, tu asistente del PLE-RD. ¿En qué puedo ayudarte hoy?' });
         }
 
         const contexto = await buscarHibrid(pregunta);
-
-        // Si el contexto es irrelevante, no lo mandes
         const systemConContexto = contexto.includes('No se encontró')
             ? SYSTEM_PROMPT
             : `${SYSTEM_PROMPT}\n\nINFORMACIÓN DEL PLE-RD (usa solo esto para responder):\n${contexto}`;
 
-        const { respuesta, provider } = await llamarLLM(systemConContexto, pregunta);
+        const { respuesta, provider } = await llamarLLM(systemConContexto, pregunta, historial);  // ← pasa historial
         console.log(`✅ Respuesta generada por ${provider}`);
         res.json({ respuesta });
 
     } catch (error) {
         console.error('ERROR:', error.message);
-        res.status(503).json({
-            respuesta: 'Servicio temporalmente no disponible. Intenta en unos minutos.',
-        });
+        res.status(503).json({ respuesta: 'Servicio temporalmente no disponible. Intenta en unos minutos.' });
     }
 });
 

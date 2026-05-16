@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const { OpenAI } = require('openai');
+
 //require('dotenv').config();
 
 const app = express();
@@ -19,10 +19,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 // Inicializar el cliente de OpenAI configurado para usar la API de Groq
-const groq = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: 'https://api.groq.com/openai/v1',
-});
 
 // Variable para almacenar los chunks del manual
 let manualChunks = [];
@@ -135,6 +131,9 @@ app.post('/api/chat', async (req, res) => {
         }
 
         const contexto = buscarContexto(pregunta);
+
+        const { OpenAI } = require('openai');
+        const groq = new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' });
 
         // Llamada a la API de Groq usando Llama 3.3 70B Versatile
         const completion = await groq.chat.completions.create({

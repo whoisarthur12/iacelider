@@ -1,0 +1,200 @@
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const { OpenAI } = require('openai');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configurar CORS para permitir que cualquier página (frontend) consuma la API
+app.use(cors({
+    origin: '*', // En producción, es recomendable poner aquí la URL exacta de tu frontend
+    methods: ['GET', 'POST']
+}));
+
+app.use(express.json());
+// Servir archivos estáticos (index.html, dune.html, etc.) automáticamente
+app.use(express.static(path.join(__dirname, '.')));
+
+// Inicializar el cliente de OpenAI configurado para usar la API de Groq
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+});
+
+// Variable para almacenar los chunks del manual
+let manualChunks = [];
+
+// Leer el manual al iniciar el servidor
+const manualPath = path.join(__dirname, 'Manual General Academico y Normativo (PLERD).md');
+
+try {
+    const rawContent = fs.readFileSync(manualPath, 'utf8');
+
+    // Dividir por líneas
+    const lines = rawContent.split(/\n/);
+    
+    let tempChunks = [];
+    let currentChunk = "";
+    
+    // Agrupar en bloques de aprox 1500 caracteres
+    for (const line of lines) {
+        if ((currentChunk.length + line.length) > 1500 && currentChunk.length > 0) {
+            tempChunks.push(currentChunk.trim());
+            currentChunk = line;
+        } else {
+            currentChunk += (currentChunk ? "\n" : "") + line;
+        }
+    }
+    if (currentChunk.trim().length > 0) {
+        tempChunks.push(currentChunk.trim());
+    }
+
+    manualChunks = tempChunks
+        .filter(section => section.length > 50)
+        .map((section, index) => ({
+            id: index,
+            content: section,
+            lower: section.toLowerCase()
+        }));
+
+    console.log(`Manual cargado.`);
+    console.log(`Chunks creados: ${manualChunks.length}`);
+
+} catch (error) {
+    console.error('Error leyendo manual:', error);
+}
+
+// Endpoint para obtener las sugerencias
+app.get('/api/sugerencias', (req, res) => {
+    res.json({
+        sugerencias: [
+            "¿Qué es el programa Plerd?",
+            "¿Cuáles son los requisitos de ingreso?",
+            "¿Cuáles son los valores de CELIDER?",
+            "¿Qué habilidades esenciales promueve el PLE-RD?"
+        ]
+    });
+});
+
+function buscarContexto(pregunta) {
+    const palabras = pregunta
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(p => p.length > 3);
+
+    const resultados = manualChunks.map(chunk => {
+        let score = 0;
+        palabras.forEach(palabra => {
+            if (chunk.lower.includes(palabra)) {
+                score += 1;
+            }
+        });
+        return {
+            ...chunk,
+            score
+        };
+    });
+
+    // Ordenar por relevancia
+    resultados.sort((a, b) => b.score - a.score);
+
+    // Tomar mejores resultados
+    const mejores = resultados
+        .filter(r => r.score > 0)
+        .slice(0, 3);
+
+    // Si no encuentra nada
+    if (mejores.length === 0) {
+        return `
+No se encontró contexto exacto.
+Responde únicamente si tienes suficiente información.
+`;
+    }
+
+    return mejores
+        .map(r => r.content)
+        .join('\n\n');
+}
+
+// Endpoint principal del Chat
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { pregunta } = req.body;
+
+        if (!pregunta) {
+            return res.status(400).json({ respuesta: 'Por favor, envía una pregunta.' });
+        }
+
+        if (pregunta.length > 500) {
+            return res.status(400).json({
+                respuesta: 'Pregunta demasiado larga.'
+            });
+        }
+
+        const contexto = buscarContexto(pregunta);
+
+        // Llamada a la API de Groq usando Llama 3.3 70B Versatile
+        const completion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: `Eres CELI, el asistente inteligente oficial del PLE-RD (Programa de Liderazgo Estudiantil de la República Dominicana), una iniciativa de CELIDER Grandeza que forma a jóvenes líderes dominicanos en habilidades esenciales, valores y pensamiento crítico.
+
+Tu misión es asistir a delegados, facilitadores y participantes del PLE-RD respondiendo sus dudas de forma clara, directa y útil.
+
+REGLAS:
+- Responde directo, sin frases como "basado en el contexto" o "según el documento"
+- Si no tienes información suficiente, di: "Esa información no está en mi base de datos del PLE-RD. Consulta a tu facilitador."
+- Sé amigable, profesional y conciso
+- Máximo 3 párrafos por respuesta
+- Habla en español dominicano natural
+
+CONTEXTO DEL MANUAL:
+${contexto}`
+                },
+                {
+                    role: "user",
+                    content: pregunta
+                }
+            ],
+            model: "llama-3.3-70b-versatile",
+            temperature: 0.3,
+            max_tokens: 500,
+        });
+
+        const respuesta = completion.choices[0]?.message?.content || "No pude generar una respuesta.";
+        
+        res.json({ respuesta });
+
+    } catch (error) {
+        console.error('ERROR COMPLETO:');
+
+        if (error.response) {
+            console.error(error.response.data);
+        } else {
+            console.error(error);
+        }
+
+        res.status(500).json({
+            respuesta: 'Error interno del servidor.'
+        });
+    }
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        hasApiKey: !!GROQ_API_KEY,
+        chunksLoaded: manualChunks.length 
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor de Chat IA corriendo en http://localhost:${PORT}`);
+    console.log(`Endpoints disponibles:`);
+    console.log(`- GET  http://localhost:${PORT}/api/sugerencias`);
+    console.log(`- POST http://localhost:${PORT}/api/chat`);
+});

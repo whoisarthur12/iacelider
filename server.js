@@ -46,36 +46,35 @@ const PROVIDERS = [
         max_tokens: 500,
     },
     {
-{
-    name: 'OpenRouter-1',
-    enabled: !!process.env.OPENROUTER_API_KEY,
-    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
-        apiKey: process.env.OPENROUTER_API_KEY,
-        baseURL: 'https://openrouter.ai/api/v1',
-    }) : null,
-    model: 'openrouter/free',
-    max_tokens: 500,
-},
-{
-    name: 'OpenRouter-2',
-    enabled: !!process.env.OPENROUTER_API_KEY,
-    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
-        apiKey: process.env.OPENROUTER_API_KEY,
-        baseURL: 'https://openrouter.ai/api/v1',
-    }) : null,
-    model: 'openrouter/free',
-    max_tokens: 500,
-},
-{
-    name: 'OpenRouter-3',
-    enabled: !!process.env.OPENROUTER_API_KEY,
-    client: process.env.OPENROUTER_API_KEY ? new OpenAI({
-        apiKey: process.env.OPENROUTER_API_KEY,
-        baseURL: 'https://openrouter.ai/api/v1',
-    }) : null,
-    model: 'openrouter/free',
-    max_tokens: 500,
-},
+        name: 'OpenRouter-1',
+        enabled: !!process.env.OPENROUTER_API_KEY,
+        client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+            apiKey: process.env.OPENROUTER_API_KEY,
+            baseURL: 'https://openrouter.ai/api/v1',
+        }) : null,
+        model: 'openrouter/auto',
+        max_tokens: 500,
+    },
+    {
+        name: 'OpenRouter-2',
+        enabled: !!process.env.OPENROUTER_API_KEY,
+        client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+            apiKey: process.env.OPENROUTER_API_KEY,
+            baseURL: 'https://openrouter.ai/api/v1',
+        }) : null,
+        model: 'openrouter/auto',
+        max_tokens: 500,
+    },
+    {
+        name: 'OpenRouter-3',
+        enabled: !!process.env.OPENROUTER_API_KEY,
+        client: process.env.OPENROUTER_API_KEY ? new OpenAI({
+            apiKey: process.env.OPENROUTER_API_KEY,
+            baseURL: 'https://openrouter.ai/api/v1',
+        }) : null,
+        model: 'openrouter/auto',
+        max_tokens: 500,
+    },
 ];
 
 // Estado de cada proveedor: si da 429, lo enfriamos por un tiempo
@@ -279,7 +278,11 @@ function cosineSim(a, b) {
 }
 
 function buscarKeywords(pregunta, topN = 10) {
-    const stopwords = new Set(['que', 'los', 'las', 'una', 'con', 'por', 'para', 'del', 'como', 'son', 'sus', 'mas', 'este', 'esta', 'esto', 'ese', 'esos', 'esas', 'hay', 'puede', 'tienen', 'tambien']);
+    const stopwords = new Set([
+        'que', 'los', 'las', 'una', 'con', 'por', 'para', 'del', 'como',
+        'son', 'sus', 'mas', 'este', 'esta', 'esto', 'ese', 'esos', 'esas',
+        'hay', 'puede', 'tienen', 'tambien',
+    ]);
     const palabras = pregunta
         .toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')

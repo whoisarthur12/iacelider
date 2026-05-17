@@ -12,32 +12,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-
-let historial = [];  // ← agrega esto al inicio
-
-async function enviarMensaje(pregunta) {
-    // Agrega la pregunta al historial
-    historial.push({ role: 'user', content: pregunta });
-
-    const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pregunta, historial }),  // ← envía historial
-    });
-
-    const data = await res.json();
-
-    // Agrega la respuesta al historial
-    historial.push({ role: 'assistant', content: data.respuesta });
-
-    return data.respuesta;
-}
-
-// Limpiar historial si el usuario refresca o cierra
-// (opcional) window.addEventListener('beforeunload', () => historial = []);
-
-// ─── Proveedores de IA (rotación automática) ──────────────────────────────────
-// Agrega las keys en tu .env y Railway. Si una falla o se agota, pasa a la siguiente.
+// ─── Proveedores de IA (carrera paralela) ─────────────────────────────────────
 const PROVIDERS = [
     {
         name: 'Groq',
@@ -50,35 +25,35 @@ const PROVIDERS = [
         max_tokens: 500,
     },
     {
-    name: 'Groq-Gemma',
-    enabled: !!process.env.GROQ_API_KEY,
-    client: process.env.GROQ_API_KEY ? new OpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-    }) : null,
-    model: 'gemma2-9b-it',
-    max_tokens: 500,
-},
-{
-    name: 'Groq-Mixtral',
-    enabled: !!process.env.GROQ_API_KEY,
-    client: process.env.GROQ_API_KEY ? new OpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-    }) : null,
-    model: 'mixtral-8x7b-32768',
-    max_tokens: 500,
-},
-{
-    name: 'Cerebras',
-    enabled: !!process.env.CEREBRAS_API_KEY,
-    client: process.env.CEREBRAS_API_KEY ? new OpenAI({
-        apiKey: process.env.CEREBRAS_API_KEY,
-        baseURL: 'https://api.cerebras.ai/v1',
-    }) : null,
-    model: 'llama3.1-8b',
-    max_tokens: 500,
-},
+        name: 'Groq-Gemma',
+        enabled: !!process.env.GROQ_API_KEY,
+        client: process.env.GROQ_API_KEY ? new OpenAI({
+            apiKey: process.env.GROQ_API_KEY,
+            baseURL: 'https://api.groq.com/openai/v1',
+        }) : null,
+        model: 'gemma2-9b-it',
+        max_tokens: 500,
+    },
+    {
+        name: 'Groq-Mixtral',
+        enabled: !!process.env.GROQ_API_KEY,
+        client: process.env.GROQ_API_KEY ? new OpenAI({
+            apiKey: process.env.GROQ_API_KEY,
+            baseURL: 'https://api.groq.com/openai/v1',
+        }) : null,
+        model: 'mixtral-8x7b-32768',
+        max_tokens: 500,
+    },
+    {
+        name: 'Cerebras',
+        enabled: !!process.env.CEREBRAS_API_KEY,
+        client: process.env.CEREBRAS_API_KEY ? new OpenAI({
+            apiKey: process.env.CEREBRAS_API_KEY,
+            baseURL: 'https://api.cerebras.ai/v1',
+        }) : null,
+        model: 'llama3.1-8b',
+        max_tokens: 500,
+    },
     {
         name: 'Gemini',
         enabled: !!process.env.GEMINI_API_KEY,
@@ -119,19 +94,9 @@ const PROVIDERS = [
         model: 'openrouter/auto',
         max_tokens: 500,
     },
-    {
-        name: 'OpenRouter-3',
-        enabled: !!process.env.OPENROUTER_API_KEY,
-        client: process.env.OPENROUTER_API_KEY ? new OpenAI({
-            apiKey: process.env.OPENROUTER_API_KEY,
-            baseURL: 'https://openrouter.ai/api/v1',
-        }) : null,
-        model: 'openrouter/auto',
-        max_tokens: 500,
-    },
 ];
 
-// Estado de cada proveedor: si da 429, lo enfriamos por un tiempo
+// ─── Estado de cooldowns ──────────────────────────────────────────────────────
 const providerState = {};
 PROVIDERS.forEach(p => {
     providerState[p.name] = { cooldownUntil: 0, errors: 0 };
@@ -139,8 +104,7 @@ PROVIDERS.forEach(p => {
 
 function proveedorDisponible(provider) {
     if (!provider.enabled) return false;
-    const state = providerState[provider.name];
-    return Date.now() > state.cooldownUntil;
+    return Date.now() > providerState[provider.name].cooldownUntil;
 }
 
 function marcarCooldown(providerName, seconds = 600) {
@@ -149,14 +113,16 @@ function marcarCooldown(providerName, seconds = 600) {
     console.warn(`⏸️  ${providerName} en cooldown por ${seconds}s`);
 }
 
-// Llama al LLM con rotación automática entre proveedores
+// ─── LLM con carrera paralela ─────────────────────────────────────────────────
 async function llamarLLM(systemPrompt, userMessage, historial = []) {
     const disponibles = PROVIDERS.filter(proveedorDisponible);
-    if (disponibles.length === 0) throw new Error('Todos los proveedores en cooldown.');
 
-    // Construir mensajes con historial (máximo últimos 6 para no gastar tokens)
+    if (disponibles.length === 0) {
+        throw new Error('Todos los proveedores están en cooldown o sin configurar.');
+    }
+
     const historialReciente = historial.slice(-6).map(m => ({
-        role: m.role,       // 'user' o 'assistant'
+        role: m.role,
         content: m.content,
     }));
 
@@ -170,8 +136,9 @@ async function llamarLLM(systemPrompt, userMessage, historial = []) {
         new Promise(async (resolve, reject) => {
             try {
                 console.log(`🏁 Intentando: ${provider.name}`);
+
                 const completion = await provider.client.chat.completions.create({
-                    messages: mensajes,   // ← usa mensajes con historial
+                    messages: mensajes,
                     model: provider.model,
                     temperature: 0.3,
                     max_tokens: provider.max_tokens,
@@ -182,6 +149,7 @@ async function llamarLLM(systemPrompt, userMessage, historial = []) {
 
                 providerState[provider.name].errors = 0;
                 providerState[provider.name].cooldownUntil = 0;
+
                 resolve({ respuesta, provider: provider.name });
 
             } catch (err) {
@@ -191,24 +159,21 @@ async function llamarLLM(systemPrompt, userMessage, historial = []) {
 
                 if (status === 429 || msg.includes('rate limit') || msg.includes('Rate limit')) {
                     const waitMatch = msg.match(/(\d+)m(\d+(\.\d+)?)s/);
-                    const waitSeconds = waitMatch ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2]) : 600;
+                    const waitSeconds = waitMatch
+                        ? parseInt(waitMatch[1]) * 60 + parseFloat(waitMatch[2])
+                        : 600;
                     marcarCooldown(provider.name, Math.ceil(waitSeconds) + 30);
                 }
-                if (status === 401 || msg.includes('API key')) marcarCooldown(provider.name, 3600);
+
+                if (status === 401 || msg.includes('API key')) {
+                    marcarCooldown(provider.name, 3600);
+                }
+
                 reject(new Error(`${provider.name} falló`));
             }
         })
     );
 
-    try {
-        const resultado = await Promise.any(carreras);
-        console.log(`✅ Ganó: ${resultado.provider}`);
-        return resultado;
-    } catch {
-        throw new Error('Ningún proveedor pudo responder.');
-    }
-}
-    // Promise.any = gana el primero en resolver, ignora los que fallen
     try {
         const resultado = await Promise.any(carreras);
         console.log(`✅ Ganó la carrera: ${resultado.provider}`);
@@ -412,9 +377,8 @@ async function buscarHibrid(pregunta) {
         : mejores.map(r => r.content).join('\n\n---\n\n');
 }
 
-// ─── System prompt ────────────────────────────────────────────────────────────
-// ─── Detectar si es un saludo simple ─────────────────────────────────────────
-const SALUDOS = /^(hola|hello|hi|buenas|buenos días|buenas tardes|buenas noches|hey|qué tal|que tal|ey)[\s!?.]*$/i;
+// ─── Saludo simple (sin llamar al LLM) ───────────────────────────────────────
+const SALUDOS = /^(hola|hello|hi|buenas|buenos días|buenas tardes|buenas noches|hey|qué tal|que tal|ey|saludos|ok|okay|gracias|vale|listo|perfecto|entendido|pero|claro|sí|si|no)[\s!?.]*$/i;
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Eres CELI, asistente del PLE-RD de CELIDER Grandeza. Ayudas a delegados y participantes del programa.
@@ -441,7 +405,7 @@ PROHIBIDO:
 app.get('/api/sugerencias', (req, res) => {
     res.json({
         sugerencias: [
-            '¿Qué es el programa Plerd?',
+            '¿Qué es el PLE-RD?',
             '¿Cuáles son los requisitos de ingreso?',
             '¿Cuáles son los valores de CELIDER?',
             '¿Qué habilidades esenciales promueve el PLE-RD?',
@@ -449,13 +413,13 @@ app.get('/api/sugerencias', (req, res) => {
     });
 });
 
-// ─── Endpoint chat ────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
     try {
-        const { pregunta, historial = [] } = req.body;  // ← recibe historial
+        const { pregunta, historial = [] } = req.body;
         if (!pregunta) return res.status(400).json({ respuesta: 'Por favor, envía una pregunta.' });
         if (pregunta.length > 500) return res.status(400).json({ respuesta: 'Pregunta demasiado larga.' });
 
+        // Saludo simple — respuesta instantánea sin LLM
         if (SALUDOS.test(pregunta.trim())) {
             return res.json({ respuesta: '¡Hola! Soy CELI, tu asistente del PLE-RD. ¿En qué puedo ayudarte hoy?' });
         }
@@ -465,13 +429,15 @@ app.post('/api/chat', async (req, res) => {
             ? SYSTEM_PROMPT
             : `${SYSTEM_PROMPT}\n\nINFORMACIÓN DEL PLE-RD (usa solo esto para responder):\n${contexto}`;
 
-        const { respuesta, provider } = await llamarLLM(systemConContexto, pregunta, historial);  // ← pasa historial
+        const { respuesta, provider } = await llamarLLM(systemConContexto, pregunta, historial);
         console.log(`✅ Respuesta generada por ${provider}`);
         res.json({ respuesta });
 
     } catch (error) {
         console.error('ERROR:', error.message);
-        res.status(503).json({ respuesta: 'Servicio temporalmente no disponible. Intenta en unos minutos.' });
+        res.status(503).json({
+            respuesta: 'Servicio temporalmente no disponible. Intenta en unos minutos.',
+        });
     }
 });
 

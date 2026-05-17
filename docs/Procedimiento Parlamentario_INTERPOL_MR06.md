@@ -1,5 +1,10 @@
+# Procedimiento Parlamentario — INTERPOL (PLE-RD)
 
+Este documento describe el procedimiento parlamentario oficial del comité de INTERPOL dentro del PLE-RD. Contiene las mociones válidas en este comité, su método de votación y los requisitos para presentarlas.
 
+A diferencia de otros comités, INTERPOL maneja una dinámica de **investigación** en lugar de debate tradicional, por lo que sus mociones están orientadas a controlar el flujo de la sesión investigativa: establecer agenda, gestionar tiempos de oradores, iniciar sesiones de preguntas y suspender o aplazar la investigación.
+
+Toda moción requiere ser presentada correctamente con los elementos indicados (tiempo, secundada, etc.) y aprobada según el tipo de votación especificado.
 ## MOCIONES
 Moción para Establecer el Orden de la Agenda Voto inmediato   Mayoría Simple
 Moción para establecer el tiempo de los Oradores

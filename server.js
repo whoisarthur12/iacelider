@@ -31,7 +31,7 @@ const PROVIDERS = [
             apiKey: process.env.GROQ_API_KEY,
             baseURL: 'https://api.groq.com/openai/v1',
         }) : null,
-        model: 'gemma2-9b-it',
+        model: 'llama-3.1-8b-instant',
         max_tokens: 500,
     },
     {
@@ -41,7 +41,7 @@ const PROVIDERS = [
             apiKey: process.env.GROQ_API_KEY,
             baseURL: 'https://api.groq.com/openai/v1',
         }) : null,
-        model: 'mixtral-8x7b-32768',
+        model: 'llama3-70b-8192',
         max_tokens: 500,
     },
     {

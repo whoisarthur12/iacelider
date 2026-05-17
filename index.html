@@ -19,6 +19,7 @@
         input { flex: 1; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 1rem; }
         button { padding: 12px 24px; background: #1a365d; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: bold; }
         button:hover { background: #2a4365; }
+        .typing { color: #888; font-style: italic; font-size: 0.9rem; padding: 8px 12px; }
     </style>
 </head>
 <body>
@@ -38,14 +39,18 @@
 
 <script>
     const chatbox = document.getElementById('chatbox');
+    const API = 'https://iacelider-production.up.railway.app';
 
-    // 1. Cargar sugerencias automáticas al iniciar la página
+    // Historial de conversación para que CELI recuerde el contexto
+    let historial = [];
+
+    // Cargar sugerencias al iniciar
     async function cargarSugerencias() {
         try {
-            const res = await fetch('https://iacelider-production.up.railway.app/api/sugerencias');
+            const res = await fetch(`${API}/api/sugerencias`);
             const data = await res.json();
             const contenedor = document.getElementById('sugerencias');
-            
+
             data.sugerencias.forEach(sug => {
                 const boton = document.createElement('button');
                 boton.className = 'btn-sugerencia';
@@ -61,43 +66,53 @@
         }
     }
 
-    // 2. Enviar pregunta al backend
+    // Enviar pregunta con historial
     async function enviarPregunta() {
         const input = document.getElementById('userInput');
         const preguntaTexto = input.value.trim();
-        
         if (!preguntaTexto) return;
 
-        // Mostrar pregunta del usuario
+        // Mostrar mensaje del usuario
         chatbox.innerHTML += `<div class="msg user-msg"><b>Tú:</b><br>${preguntaTexto}</div>`;
         input.value = '';
         chatbox.scrollTop = chatbox.scrollHeight;
 
+        // Indicador de escritura
+        const typingId = 'typing-' + Date.now();
+        chatbox.innerHTML += `<div class="typing" id="${typingId}">CELI está escribiendo...</div>`;
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        // Guardar en historial ANTES de enviar
+        historial.push({ role: 'user', content: preguntaTexto });
+
         try {
-            // Petición ajustada exactamente a lo que pide tu server.js
-            const respuesta = await fetch('https://iacelider-production.up.railway.app/api/chat', {
+            const res = await fetch(`${API}/api/chat`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ pregunta: preguntaTexto }) // Campo "pregunta" correcto
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pregunta: preguntaTexto, historial })
             });
 
-            const data = await respuesta.json();
-            
-            // Extraer la propiedad "respuesta" del JSON devuelto
+            const data = await res.json();
             const respuestaIA = data.respuesta || "No recibí una respuesta válida.";
-            
+
+            // Guardar respuesta en historial
+            historial.push({ role: 'assistant', content: respuestaIA });
+
+            // Quitar indicador y mostrar respuesta
+            document.getElementById(typingId)?.remove();
             chatbox.innerHTML += `<div class="msg ia-msg"><b>Asistente:</b><br>${respuestaIA}</div>`;
+
         } catch (error) {
+            document.getElementById(typingId)?.remove();
             chatbox.innerHTML += `<div class="msg ia-msg" style="color:red; background:#fff5f5;"><b>Error:</b> Hubo un problema al conectar con el servidor.</div>`;
             console.error("Error:", error);
+            // Si falló, quitar del historial para no contaminar el contexto
+            historial.pop();
         }
-        
+
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
-    // Inicializar sugerencias de inmediato
     cargarSugerencias();
 </script>
 
